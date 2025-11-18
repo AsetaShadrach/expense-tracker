@@ -26,3 +26,9 @@ type Group struct {
 	CreatedBy  string   `json:"createdBy"`
 	Admins     []string `json:"admins"`
 }
+
+type ErrorList struct {
+	ResponseCode string   `json:"responseCode"`
+	Message      string   `json:"message"`
+	Errors       []string `json:"errors"`
+}

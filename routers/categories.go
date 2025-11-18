@@ -6,7 +6,7 @@ import (
 )
 
 func RegisterCategoryRoutes(r *mux.Router) {
-	r.HandleFunc("/api/v1/user", handlers.CreateCategoryHandler).Methods("POST")
-	r.HandleFunc("/api/v1/user/{id}", handlers.GetOrDeleteCategoryHandler).Methods("GET", "DELETE")
-	r.HandleFunc("/api/v1/user/update/{id}", handlers.UpdateCategoryHandler).Methods("PUT", "PATCH")
+	r.HandleFunc("/api/v1/category", handlers.CreateCategoryHandler).Methods("POST")
+	r.HandleFunc("/api/v1/category/{id}", handlers.GetOrDeleteCategoryHandler).Methods("GET", "DELETE")
+	r.HandleFunc("/api/v1/category/update/{id}", handlers.UpdateCategoryHandler).Methods("PUT", "PATCH")
 }

@@ -17,9 +17,7 @@ type CategoryInputDto struct {
 }
 
 type UserInputDto struct {
-	FirstName    string `json:"first_name" validate:"required,alpha,min=2"`
-	LastName     string `json:"last_name" validate:"required,alpha,min=2"`
-	Username     string `json:"username" validate:"required,alpha,min=2"`
+	Username     string `json:"username" validate:"required,alphanum,min=2"`
 	ProfilePhoto string `json:"profile_photo" validate:"omitempty,base64"`
 	Email        string `json:"email" validate:"required,email"`
 	Groups       []int  `json:"groups" validate:"omitempty,gt=1,dive,number"`
@@ -57,6 +55,14 @@ func ValidationErrorTranslation(trans ut.Translator, validatorPtr *validator.Val
 		return ut.Add("email", "Invalid formart on {0} ", true)
 	}, func(ut ut.Translator, fe validator.FieldError) string {
 		t, _ := ut.T("email", fe.Field())
+
+		return t
+	})
+
+	validatorPtr.RegisterTranslation("alpha", trans, func(ut ut.Translator) error {
+		return ut.Add("alpha", "Invalid formart on {0} .Expected letters ; [A-Z,a-z]", true)
+	}, func(ut ut.Translator, fe validator.FieldError) string {
+		t, _ := ut.T("alpha", fe.Field())
 
 		return t
 	})

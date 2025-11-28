@@ -23,7 +23,16 @@ func main() {
 	if err != nil {
 		fmt.Println("TODO : Initiate gracefull shutdown -- > Server.Close ?")
 	} else {
-		fmt.Println("DB connection succesful. Beginning to load routers ---")
+		fmt.Println("DB connection succesful. Beginning auto migration ---")
+		// Auto migrate
+		err := schemas.DB.AutoMigrate(schemas.User{}, schemas.Category{}, schemas.Group{})
+
+		if err != nil {
+			fmt.Printf("An error occured during migration : %v \n\n", err.Error())
+			panic(err.Error())
+		}
+
+		fmt.Println("Migration succesfful. Beginning to load routers ---")
 	}
 
 	r := mux.NewRouter()

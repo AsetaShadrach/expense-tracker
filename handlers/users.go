@@ -34,15 +34,15 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	err := validate.Struct(validatedData)
 
 	if err != nil {
-		fmt.Println("Error occured during input validation")
-
 		validationErrors := err.(validator.ValidationErrors)
-		validationErrStrs := schemas.TranslateValidationErrors(validationErrors, validate)
+		validationErrorsList := schemas.TranslateValidationErrors(validationErrors, validate)
+
+		fmt.Println("Error occured during input validation --> ", validationErrorsList)
 
 		valErr := schemas.ErrorList{
-			ResponseCode: "I001",
+			ResponseCode: "USR001",
 			Message:      "Invalid input",
-			Errors:       validationErrStrs,
+			Errors:       validationErrorsList,
 		}
 
 		var marshalErr error
@@ -61,7 +61,7 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Println(userCreationError.Error())
 
 			valErr := schemas.ErrorList{
-				ResponseCode: "P001",
+				ResponseCode: "USR001",
 				Message:      "User creation error",
 				Errors:       []string{userCreationError.Error()},
 			}

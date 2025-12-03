@@ -11,9 +11,9 @@ import (
 )
 
 type CategoryInputDto struct {
-	Name        string
-	Description string
-	SubCategory int
+	Name        string `validate:"required,alphanumunicode"`
+	Description string `validate:"required,alphanumunicode"`
+	Subcategory int
 }
 
 type UserInputDto struct {
@@ -44,7 +44,7 @@ func ValidationErrorTranslation(trans ut.Translator, validatorPtr *validator.Val
 	})
 
 	validatorPtr.RegisterTranslation("required", trans, func(ut ut.Translator) error {
-		return ut.Add("required", "{0} must have a value {0}", true)
+		return ut.Add("required", "<{0}> is empty or null or missing a value", true)
 	}, func(ut ut.Translator, fe validator.FieldError) string {
 		t, _ := ut.T("required", fe.Field())
 
@@ -52,7 +52,7 @@ func ValidationErrorTranslation(trans ut.Translator, validatorPtr *validator.Val
 	})
 
 	validatorPtr.RegisterTranslation("email", trans, func(ut ut.Translator) error {
-		return ut.Add("email", "Invalid formart on {0} ", true)
+		return ut.Add("email", "Invalid formart on <{0}> ", true)
 	}, func(ut ut.Translator, fe validator.FieldError) string {
 		t, _ := ut.T("email", fe.Field())
 
@@ -60,9 +60,17 @@ func ValidationErrorTranslation(trans ut.Translator, validatorPtr *validator.Val
 	})
 
 	validatorPtr.RegisterTranslation("alpha", trans, func(ut ut.Translator) error {
-		return ut.Add("alpha", "Invalid formart on {0} .Expected letters ; [A-Z,a-z]", true)
+		return ut.Add("alpha", "Invalid formart on <{0}> .Expected letters ; [A-Z,a-z]", true)
 	}, func(ut ut.Translator, fe validator.FieldError) string {
 		t, _ := ut.T("alpha", fe.Field())
+
+		return t
+	})
+
+	validatorPtr.RegisterTranslation("alphanumunicode", trans, func(ut ut.Translator) error {
+		return ut.Add("alphanumunicode", "Invalid formart on <{0}> .Only letters and numbers allowed", true)
+	}, func(ut ut.Translator, fe validator.FieldError) string {
+		t, _ := ut.T("alphanumunicode", fe.Field())
 
 		return t
 	})
@@ -79,7 +87,6 @@ func TranslateValidationErrors(e validator.ValidationErrors, validatorPtr *valid
 
 	for _, er := range e {
 		// can translate each error one at a time.
-		// fmt.Println(er.Translate(trans))
 		validationErrorStrs = append(validationErrorStrs, er.Translate(trans))
 	}
 	return validationErrorStrs

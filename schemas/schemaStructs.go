@@ -17,9 +17,9 @@ type CustomGormModel struct {
 
 type Category struct {
 	CustomGormModel
-	Name        string
-	Description string
-	SubCategory int
+	Name        string `json:"name" gorm:"unique"`
+	Description string `json:"description"`
+	Subcategory int    `json:"subcategory"`
 }
 
 type User struct {

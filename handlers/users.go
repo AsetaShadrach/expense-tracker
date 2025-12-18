@@ -3,26 +3,30 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 
 	"github.com/AsetaShadrach/expense-tracker/helpers"
 	"github.com/AsetaShadrach/expense-tracker/schemas"
+	"github.com/AsetaShadrach/expense-tracker/utils"
+	logging "github.com/AsetaShadrach/expense-tracker/utils"
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 )
 
 var validate *validator.Validate
+var tracer = *utils.Tracer
 
 func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(r.URL.Path)
 	w.Header().Set("Content-Type", "application/json")
 
-	var responseVal []byte
+	var (
+		responseVal      []byte
+		validationSchema schemas.UserInputDto
+	)
 
-	var validatedData schemas.UserInputDto
-
-	decodingError := json.NewDecoder(r.Body).Decode(&validatedData)
+	decodingError := json.NewDecoder(r.Body).Decode(&validationSchema)
 	if decodingError != nil {
 		fmt.Println("An error occured decoding")
 		w.Write([]byte(decodingError.Error()))
@@ -31,13 +35,13 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	validate := validator.New(validator.WithRequiredStructEnabled())
 
-	err := validate.Struct(validatedData)
+	err := validate.Struct(validationSchema)
 
 	if err != nil {
 		validationErrors := err.(validator.ValidationErrors)
 		validationErrorsList := schemas.TranslateValidationErrors(validationErrors, validate)
 
-		fmt.Println("Error occured during input validation --> ", validationErrorsList)
+		logging.GeneralLogger.Error("Error occured during input validation --> ", slog.Any("Errors", validationErrorsList))
 
 		valErr := schemas.ErrorList{
 			ResponseCode: "USR001",
@@ -49,13 +53,13 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 		responseVal, marshalErr = json.MarshalIndent(valErr, "", "	")
 
 		if marshalErr != nil {
-			fmt.Println("-------------- >  ", marshalErr)
+			logging.GeneralLogger.Error("-------------- >  ", slog.Any("Errors", marshalErr))
 		}
 
 		w.WriteHeader(http.StatusExpectationFailed)
 	} else {
 
-		userCreationResponse, userCreationError := helpers.CreateUser(r.Context(), validatedData)
+		userCreationResponse, userCreationError := helpers.CreateUser(r.Context(), validationSchema)
 
 		if userCreationError != nil {
 			fmt.Println(userCreationError.Error())
@@ -72,10 +76,10 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			responseVal, _ = json.MarshalIndent(userCreationResponse, "", "	")
 			w.WriteHeader(http.StatusOK)
+			logging.GeneralLogger.Info("Finalizing user creation")
 		}
 	}
 
-	fmt.Println("Finalizing user creation")
 	w.Write(responseVal)
 }
 
@@ -136,9 +140,7 @@ func GetOrDeleteUserHandler(w http.ResponseWriter, r *http.Request) {
 
 		w.Write(responseVal)
 	} else {
-
 		reponseBytes, _ := json.Marshal(resp)
-		fmt.Println(r.URL.Path)
 
 		w.WriteHeader(http.StatusOK)
 		w.Write(reponseBytes)

@@ -4,13 +4,20 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/AsetaShadrach/expense-tracker/schemas"
+	"github.com/AsetaShadrach/expense-tracker/utils"
 	"gorm.io/gorm"
 )
 
+var tracer = *utils.Tracer
+
 func CreateUser(ctx context.Context, data schemas.UserInputDto) (response map[string]interface{}, err error) {
+	_, span := tracer.Start(ctx, "create_user")
+	defer span.End()
+
 	user := schemas.User{
 		Username:     data.Username,
 		Email:        data.Email,
@@ -22,7 +29,7 @@ func CreateUser(ctx context.Context, data schemas.UserInputDto) (response map[st
 	err = gorm.G[schemas.User](schemas.DB, result).Create(ctx, &user)
 
 	if err != nil {
-		fmt.Println("An error writing to db occured ", err)
+		utils.GeneralLogger.Error("An error writing to db occured ", slog.Any("Errors", err))
 		return nil, err
 	}
 
@@ -31,7 +38,7 @@ func CreateUser(ctx context.Context, data schemas.UserInputDto) (response map[st
 		return nil, err
 	}
 
-	fmt.Println("User created succesfully. ID  --> ", user.ID)
+	utils.GeneralLogger.Info("User created succesfully. ID  --> ", slog.Int("id", int(user.ID)))
 
 	return userJson, nil
 }

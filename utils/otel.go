@@ -61,7 +61,7 @@ func InitTracer() (*sdktrace.TracerProvider, error) {
 }
 
 // Convert header to attributes
-func HeaderToAttributes(data map[string][]string) []attribute.KeyValue {
+func HeaderToAttributes(headerKey string, data map[string][]string) []attribute.KeyValue {
 	var dataString string
 
 	for k, v := range data {
@@ -69,7 +69,7 @@ func HeaderToAttributes(data map[string][]string) []attribute.KeyValue {
 	}
 	var concatenatedHeaders = make(map[string]interface{})
 
-	concatenatedHeaders["http.request.headers"] = dataString
+	concatenatedHeaders[headerKey] = dataString
 
 	return MapToAttributes(concatenatedHeaders)
 }

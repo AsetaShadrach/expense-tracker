@@ -1,9 +1,5 @@
 ## TODO 
-- Implement logger
-- Configure Models for crud 
-- Configure model migration
 - Add filter endpoints for all models
 
 # Critical TODO 
-- Add logger
-- Swich from mutable params to structs
+- Switch from mutable params to structs

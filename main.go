@@ -55,7 +55,12 @@ func main() {
 
 	r := mux.NewRouter()
 	r.Use(otelmux.Middleware("expense-tracker-server"))
-	r.Use(utils.InstrumentRequest)
+
+	// InsertMiddlewares
+	r.Use(
+		utils.ErrorResolver,
+		utils.InstrumentRequest,
+	)
 
 	routers.RegisterCashFlowRoutes(r)
 	routers.RegisterCategoryRoutes(r)

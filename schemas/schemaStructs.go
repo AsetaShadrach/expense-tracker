@@ -35,6 +35,7 @@ type Group struct {
 	Name       string `json:"name" gorm:"unique"`
 	GroupPhoto string `json:"photo_url"`
 	CreatedBy  string `json:"created_by"`
+	UpdatedBy  string `json:"updated_by"`
 	Admins     string `json:"admins"`
 }
 

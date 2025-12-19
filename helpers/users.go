@@ -15,7 +15,7 @@ import (
 var tracer = *utils.Tracer
 
 func CreateUser(ctx context.Context, data schemas.UserInputDto) (response map[string]interface{}, err error) {
-	_, span := tracer.Start(ctx, "create_user")
+	_, span := tracer.Start(ctx, "helper.createUser")
 	defer span.End()
 
 	user := schemas.User{
@@ -48,6 +48,9 @@ func UpdateUser(userId int) (response map[string]interface{}, err error) {
 }
 
 func FilterUsers(ctx context.Context, queryParamsPtr *map[string]string) (response map[string]interface{}, err error) {
+	_, span := tracer.Start(ctx, "helper.filterUsers")
+	defer span.End()
+
 	queryParams := *queryParamsPtr
 
 	userList := []schemas.User{}
@@ -63,6 +66,9 @@ func FilterUsers(ctx context.Context, queryParamsPtr *map[string]string) (respon
 }
 
 func GetorDeleteUser(ctx context.Context, userId int, method string) (response map[string]interface{}, err error) {
+	_, span := tracer.Start(ctx, "helper.getOrDeleteUser")
+	defer span.End()
+
 	user, err := gorm.G[schemas.User](schemas.DB).Where("id = ?", userId).First(ctx)
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {

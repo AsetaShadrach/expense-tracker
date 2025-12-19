@@ -3,8 +3,8 @@ package utils
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"runtime/debug"
@@ -44,7 +44,7 @@ func InstrumentRequest(next http.Handler) http.Handler {
 		responseAttrs := HeaderToAttributes("http.response.headers", newRw.Header())
 		span.SetAttributes(responseAttrs...)
 
-		w.Header().Add("Content-Type", "application/json")
+		// w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(newRw.Result().StatusCode)
 		w.Write(respBytes)
 	})
@@ -52,9 +52,12 @@ func InstrumentRequest(next http.Handler) http.Handler {
 
 func ErrorResolver(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
 		defer func() {
 			if err := recover(); err != nil {
-				GeneralLogger.Error(fmt.Sprintf("Exception occured : % v", string(debug.Stack())))
+				// GeneralLogger.Error("Expectation --- ", string(debug.Stack()))
+				log.Println(string(debug.Stack()))
 				_, span := tracer.Start(r.Context(), "exceptionOccured")
 				defer span.End()
 
@@ -70,9 +73,11 @@ func ErrorResolver(next http.Handler) http.Handler {
 					Errors:       []string{"Internal server Error"},
 				}
 				byts, _ := json.Marshal(tracedErrors)
-				http.Error(w, string(byts), http.StatusInternalServerError)
-				// w.Write(byts)
-				// w.WriteHeader(http.StatusInternalServerError)
+				// http.Error(w, string(byts), http.StatusInternalServerError)
+				w.Write(byts)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+
 			}
 		}()
 		next.ServeHTTP(w, r)

@@ -22,7 +22,8 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var (
-		responseVal      []byte
+		responseBytes    []byte
+		err              error
 		validationSchema schemas.UserInputDto
 	)
 
@@ -33,29 +34,9 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	validate := validator.New(validator.WithRequiredStructEnabled())
-
-	err := validate.Struct(validationSchema)
-
+	responseBytes, err = schemas.PerformValidation(validationSchema, "USR001")
 	if err != nil {
-		validationErrors := err.(validator.ValidationErrors)
-		validationErrorsList := schemas.TranslateValidationErrors(validationErrors, validate)
-
-		logging.GeneralLogger.Error("Error occured during input validation --> ", slog.Any("Errors", validationErrorsList))
-
-		valErr := schemas.ErrorList{
-			ResponseCode: "USR001",
-			Message:      "Invalid input",
-			Errors:       validationErrorsList,
-		}
-
-		var marshalErr error
-		responseVal, marshalErr = json.MarshalIndent(valErr, "", "	")
-
-		if marshalErr != nil {
-			logging.GeneralLogger.Error("-------------- >  ", slog.Any("Errors", marshalErr))
-		}
-
+		logging.GeneralLogger.Error("Error occured during input validation --> ", slog.Any("Errors", responseBytes))
 		w.WriteHeader(http.StatusExpectationFailed)
 	} else {
 
@@ -70,17 +51,17 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 				Errors:       []string{userCreationError.Error()},
 			}
 
-			responseVal, _ = json.MarshalIndent(valErr, "", "	")
+			responseBytes, _ = json.MarshalIndent(valErr, "", "	")
 
 			w.WriteHeader(http.StatusInternalServerError)
 		} else {
-			responseVal, _ = json.MarshalIndent(userCreationResponse, "", "	")
+			responseBytes, _ = json.MarshalIndent(userCreationResponse, "", "	")
 			w.WriteHeader(http.StatusOK)
 			logging.GeneralLogger.Info("Finalizing user creation")
 		}
 	}
 
-	w.Write(responseVal)
+	w.Write(responseBytes)
 }
 
 func UpdateUserHandler(w http.ResponseWriter, r *http.Request) {

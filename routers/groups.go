@@ -7,6 +7,6 @@ import (
 
 func RegisterGroupRoutes(r *mux.Router) {
 	r.HandleFunc("/api/v1/group", handlers.CreateGroupHandler).Methods("POST")
-	r.HandleFunc("/api/v1/group/{id}", handlers.GetOrDeleteGroupHandler).Methods("GET", "DELETE")
-	r.HandleFunc("/api/v1/group/update/{id}", handlers.UpdateGroupHandler).Methods("PUT", "PATCH")
+	r.HandleFunc("/api/v1/groups", handlers.FilterGroupsHandler).Methods("GET")
+	r.HandleFunc("/api/v1/group/{id}", handlers.GUDGroupHandler).Methods("GET", "DELETE", "PUT", "PATCH")
 }

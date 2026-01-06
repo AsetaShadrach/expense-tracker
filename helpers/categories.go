@@ -29,8 +29,26 @@ func UpdateCategory(categoryId int) (response map[string]interface{}, err error)
 	return nil, err
 }
 
-func filterCategorys() (response map[string]interface{}, err error) {
-	return nil, err
+func FilterCategories(ctx context.Context, queryParams *map[string]interface{}) (response map[string]interface{}, err error) {
+	_, span := tracer.Start(ctx, "helpers.filterCategories")
+	defer span.End()
+
+	queries := *queryParams
+	offset := queries["page"].(int) - 1*queries["items"].(int)
+
+	resp, err := gorm.G[schemas.Category](schemas.DB).Offset(offset).Limit(queries["items"].(int)).Where("").Find(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	response = map[string]interface{}{
+		"items": queries["items"].(int),
+		"page":  queries["page"].(int),
+		"data":  resp,
+	}
+
+	return response, err
 }
 
 func GetOrDeleteCategory(ctx context.Context, categoryId int, method string) (response map[string]interface{}, err error) {

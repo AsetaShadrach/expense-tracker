@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/AsetaShadrach/expense-tracker/schemas"
@@ -50,34 +51,65 @@ func UpdateGroup(ctx context.Context, groupId int, updateSchema schemas.GroupUpd
 		Admins:     strings.Join(updateSchema.Admins, ","),
 	}
 
-	_, err = gorm.G[schemas.Group](schemas.DB).Where("id = ? ", groupId).Updates(ctx, group)
+	var rowsAffected int
 
+	rowsAffected, err = gorm.G[schemas.Group](schemas.DB).Where("id = ? ", groupId).Updates(ctx, group)
 	if err != nil {
 		groupUpdateError := schemas.ErrorList{
 			ResponseCode: "GR001",
 			Message:      "An error occured",
-			Errors:       []string{"err"},
+			Errors:       []string{fmt.Sprintf("An error occured updating group with id %d", groupId)},
 		}
 
-		utils.GeneralLogger.Error("an error occured %v", err.Error())
+		span.SetAttributes(utils.MapToAttributes(
+			map[string]interface{}{"errors": []string{err.Error()}})...,
+		)
 
 		response, _ = schemas.ConvertStructToMap(groupUpdateError)
+	} else if rowsAffected < 1 {
+		groupUpdateError := schemas.ErrorList{
+			ResponseCode: "GR000",
+			Message:      "An error occured",
+			Errors:       []string{fmt.Sprintf("Group with ID %d not found", groupId)},
+		}
+
+		span.SetAttributes(utils.MapToAttributes(
+			map[string]interface{}{"errors": groupUpdateError.Errors})...,
+		)
+
+		response, _ = schemas.ConvertStructToMap(groupUpdateError)
+
+	} else {
+		// If update happend it means the group exists
+		updatedGroup, _ := gorm.G[schemas.Group](schemas.DB).Where("id = ? ", groupId).First(ctx)
+		response, _ = schemas.ConvertStructToMap(updatedGroup)
 	}
 
-	response, _ = schemas.ConvertStructToMap(group)
-
-	return nil, err
+	return response, err
 }
 
-func FilterGroups(ctx context.Context, queryParams *map[string]string) (response map[string]interface{}, err error) {
+func FilterGroups(ctx context.Context, queryParams *map[string]interface{}) (response map[string]interface{}, err error) {
 	_, span := tracer.Start(ctx, "helpers.filterGroups")
 	defer span.End()
 
-	return nil, err
+	queryData := *queryParams
+	offset := (queryData["page"].(int) - 1) * queryData["items"].(int)
+	resp, err := gorm.G[schemas.Group](schemas.DB).Offset(offset).Limit(queryData["items"].(int)).Where("").Find(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	response = map[string]interface{}{
+		"page":  queryData["page"].(int),
+		"items": len(resp),
+		"data":  resp,
+	}
+
+	return response, nil
 }
 
-func GetOrDeleteGroup(ctx context.Context, groupId int, method string) (response map[string]interface{}, err error) {
-	_, span := tracer.Start(ctx, "helpers.getOrDeleteGroup")
+func GUDGroup(ctx context.Context, groupId int, method string, updateGroupSchema schemas.GroupUpdateDto) (response map[string]interface{}, err error) {
+	_, span := tracer.Start(ctx, "helpers.gudGroup")
 	defer span.End()
 
 	var group schemas.Group
@@ -85,11 +117,13 @@ func GetOrDeleteGroup(ctx context.Context, groupId int, method string) (response
 	if method == "GET" {
 		group, err = gorm.G[schemas.Group](schemas.DB).Where("id = ? ", groupId).First(ctx)
 		response, _ = schemas.ConvertStructToMap(group)
-	} else {
+	} else if method == "DELETE" {
 		_, err = gorm.G[schemas.Group](schemas.DB).Where("id = ? ", groupId).Delete(ctx)
 		response = map[string]interface{}{
 			"message": "successful",
 		}
+	} else {
+		response, err = UpdateGroup(ctx, groupId, updateGroupSchema)
 	}
 
 	return response, err

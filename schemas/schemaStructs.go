@@ -37,6 +37,7 @@ type Group struct {
 	CreatedBy  string `json:"created_by"`
 	UpdatedBy  string `json:"updated_by"`
 	Admins     string `json:"admins"`
+	Members    string `json:"members"`
 }
 
 type ErrorList struct {

@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"slices"
 	"strconv"
+	"strings"
 
 	"github.com/AsetaShadrach/expense-tracker/helpers"
 	"github.com/AsetaShadrach/expense-tracker/schemas"
@@ -59,9 +61,47 @@ func CreateGroupHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func UpdateGroupHandler(w http.ResponseWriter, r *http.Request) {
-	_, span := tracer.Start(r.Context(), "updateGroupHandler")
+func FilterGroupsHandler(w http.ResponseWriter, r *http.Request) {
+	_, span := tracer.Start(r.Context(), "filterGroupsHandler")
 	defer span.End()
+
+	queryParams := make(map[string]interface{})
+
+	singleIntParams := []string{"items", "page"}
+
+	for key, val := range r.URL.Query() {
+		if slices.Contains(singleIntParams, key) {
+			queryParams[key], _ = strconv.Atoi(val[0])
+		} else {
+			queryParams[key] = val
+		}
+	}
+
+	response, err := helpers.FilterGroups(r.Context(), &queryParams)
+
+	if err != nil {
+		errResponse := schemas.ErrorList{
+			Message:      "An error occured",
+			ResponseCode: "FTOO9",
+			Errors:       []string{err.Error()},
+		}
+
+		errorBytes, _ := json.Marshal(errResponse)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(errorBytes)
+	}
+
+	fmt.Println(r.URL.Path)
+	responseBytes, _ := json.Marshal(response)
+	w.WriteHeader(http.StatusOK)
+	w.Write(responseBytes)
+}
+
+func GUDGroupHandler(w http.ResponseWriter, r *http.Request) {
+	_, span := tracer.Start(r.Context(), "gudGroupHandler")
+	defer span.End()
+
+	w.Header().Set("Content-Type", "application/json")
 
 	var (
 		responseBytes    []byte
@@ -69,41 +109,21 @@ func UpdateGroupHandler(w http.ResponseWriter, r *http.Request) {
 		validationSchema schemas.GroupUpdateDto
 	)
 
-	responseBytes, err = schemas.PerformValidation(validationSchema, "GR0017")
-	if err != nil {
-		utils.GeneralLogger.Error("An error occured validating group update data ", string(responseBytes))
-
-		w.WriteHeader(http.StatusExpectationFailed)
-		w.Write(responseBytes)
-		return
+	if strings.Contains("PUT,PATCH", r.Method) {
+		_ = json.NewDecoder(r.Body).Decode(&validationSchema)
+		responseBytes, err = schemas.PerformValidation(validationSchema, "GR0017")
+		if err != nil {
+			utils.GeneralLogger.Error("An error occured validating group update data ", string(responseBytes))
+			w.WriteHeader(http.StatusExpectationFailed)
+			w.Write(responseBytes)
+			return
+		}
 	}
 
 	vars := mux.Vars(r)
-	id, _ := strconv.Atoi(vars["id"])
-
-	response, err := helpers.UpdateGroup(r.Context(), id, validationSchema)
-	responseBytes, _ = json.Marshal(response)
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(responseBytes)
-}
-
-func filterGroupsHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(r.URL.Path)
-	w.Write([]byte("TODO"))
-}
-
-func GetOrDeleteGroupHandler(w http.ResponseWriter, r *http.Request) {
-	_, span := tracer.Start(r.Context(), "getOrDeleteGroupHandler")
-	defer span.End()
-
-	w.Header().Set("Content-Type", "application/json")
-
-	var responseBytes []byte
-
-	vars := mux.Vars(r)
 	groupId, _ := strconv.Atoi(vars["id"])
-	response, err := helpers.GetOrDeleteGroup(r.Context(), groupId, r.Method)
+
+	response, err := helpers.GUDGroup(r.Context(), groupId, r.Method, validationSchema)
 
 	if err != nil {
 		response := schemas.ErrorList{

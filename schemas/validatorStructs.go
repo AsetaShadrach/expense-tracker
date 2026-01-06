@@ -30,6 +30,7 @@ type GroupInputDto struct {
 	GroupPhoto string   `json:"group_photo" validate:"omitempty,alphanumunicode"`
 	CreatedBy  string   `json:"created_by" validate:"alphanumunicode"`
 	Admins     []string `json:"admins" validate:"omitempty,gte=1,dive,alpha"`
+	Members    []string `json:"members" validate:"omitempty,gte=1,dive,required"`
 }
 
 func (dto GroupInputDto) GetValidatorName() string {
@@ -39,8 +40,9 @@ func (dto GroupInputDto) GetValidatorName() string {
 type GroupUpdateDto struct {
 	Name       string   `json:"name" validate:"omitempty,alphanumunicode"`
 	GroupPhoto string   `json:"group_photo" validate:"omitempty,alphanumunicode"`
-	UpdatedBy  string   `json:"updated_by" validate:"alphanumunicode"`
-	Admins     []string `json:"admins" validate:"omitempty,gte=1,dive,alpha"`
+	UpdatedBy  string   `json:"updated_by" validate:"required,alphanumunicode"`
+	Admins     []string `json:"admins" validate:"omitempty,gte=1,dive,required"`
+	Members    []string `json:"members" validate:"omitempty,gte=1,dive,required"`
 }
 
 func (dto GroupUpdateDto) GetValidatorName() string {

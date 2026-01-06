@@ -56,11 +56,11 @@ func FilterUsers(ctx context.Context, queryParamsPtr *map[string]string) (respon
 	userList := []schemas.User{}
 	schemas.DB.Limit(10).Where("username LIKE ?", queryParams["name"]+"%").Find(&userList)
 
-	userListResponse := make(map[string]interface{})
-
-	userListResponse["page"] = 1
-	userListResponse["items"] = 10
-	userListResponse["data"] = userList
+	userListResponse := map[string]interface{}{
+		"page":  1,
+		"items": 10,
+		"data":  userList,
+	}
 
 	return userListResponse, nil
 }

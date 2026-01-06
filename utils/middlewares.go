@@ -57,12 +57,14 @@ func ErrorResolver(next http.Handler) http.Handler {
 		defer func() {
 			if err := recover(); err != nil {
 				// GeneralLogger.Error("Expectation --- ", string(debug.Stack()))
+				log.Println("Error occured : ", err)
 				log.Println(string(debug.Stack()))
 				_, span := tracer.Start(r.Context(), "exceptionOccured")
 				defer span.End()
 
 				errorTrace := make(map[string]interface{})
 				errorTrace["exception.stack.trace"] = string(debug.Stack())
+				errorTrace["errors"] = err
 
 				span.SetAttributes(MapToAttributes(errorTrace)...)
 				w.Header().Set("trace-id", span.SpanContext().TraceID().String())
@@ -73,7 +75,6 @@ func ErrorResolver(next http.Handler) http.Handler {
 					Errors:       []string{"Internal server Error"},
 				}
 				byts, _ := json.Marshal(tracedErrors)
-				// http.Error(w, string(byts), http.StatusInternalServerError)
 				w.Write(byts)
 				w.WriteHeader(http.StatusInternalServerError)
 				return

@@ -100,6 +100,17 @@ func ValidationErrorTranslation(trans ut.Translator, validatorPtr *validator.Val
 
 		return t
 	})
+
+	validatorPtr.RegisterTranslation("oneof", trans, func(ut ut.Translator) error {
+		return ut.Add("oneof", "Invalid values for <{0}> . Allowed values are <{1}>", true)
+	}, func(ut ut.Translator, fe validator.FieldError) string {
+		validationStr := strings.Replace(fe.Param(), " ", " or ", -1)
+
+		t, _ := ut.T("oneof", fe.Field(), validationStr)
+
+		return t
+	})
+
 }
 
 func TranslateValidationErrors(e validator.ValidationErrors, validatorPtr *validator.Validate) []string {

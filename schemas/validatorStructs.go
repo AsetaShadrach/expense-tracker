@@ -5,12 +5,26 @@ import (
 )
 
 type CategoryInputDto struct {
-	Name        string `validate:"required,alphanumunicode"`
-	Description string `validate:"required,alphanumunicode"`
-	Subcategory int
+	Name           string `validate:"required,alphanumspace"`
+	Description    string `validate:"omitempty,alphanumspace"`
+	CategoryType   string `json:"category_type" validate:"oneof=topic category"`
+	ParentCategory int    `json:"parent_category"`
+	CreatedBy      int    `json:"created_by"`
 }
 
 func (dto CategoryInputDto) GetValidatorName() string {
+	return reflect.TypeOf(dto).Name()
+}
+
+type CategoryUpdateDto struct {
+	Name           string `validate:"omitempty,alphanumspace"`
+	Description    string `validate:"omitempty,alphanumspace"`
+	CategoryType   string `json:"category_type" validate:"omitempty,oneof=topic category"`
+	ParentCategory int    `json:"parent_category" validate:"omitempty"`
+	CreatedBy      int    `json:"created_by"  validate:"omitempty"`
+}
+
+func (dto CategoryUpdateDto) GetValidatorName() string {
 	return reflect.TypeOf(dto).Name()
 }
 
@@ -46,5 +60,31 @@ type GroupUpdateDto struct {
 }
 
 func (dto GroupUpdateDto) GetValidatorName() string {
+	return reflect.TypeOf(dto).Name()
+}
+
+type CashFlowCreateDto struct {
+	Amount          float64 `json:"amount" validate:"required"`
+	Month           int     `json:"month"  validate:"lte=12,gte=1"`
+	Day             int     `json:"day" validate:"lte=31,gte=1"`
+	IncomeOrExpense string  `json:"income_or_expense" validate:"oneof=income expense"` // Income/Expense
+	Description     string  `json:"description"`
+	CategoryId      int     `json:"category_id" validate:"required"`
+}
+
+func (dto CashFlowCreateDto) GetValidatorName() string {
+	return reflect.TypeOf(dto).Name()
+}
+
+type CashFlowUpdateDto struct {
+	Amount          float64 `json:"amount" validate:"omitempty"`
+	Month           int     `json:"month"  validate:"omitempty,lte=12,gte=1"`
+	Day             int     `json:"day" validate:"omitempty,lte=31,gte=1"`
+	IncomeOrExpense string  `json:"income_or_expense" validate:"omitempty,oneof=income expense"` // Income/Expense
+	Description     string  `json:"description" validate:"omitempty"`
+	CategoryId      int     `json:"category_id" validate:"omitempty"`
+}
+
+func (dto CashFlowUpdateDto) GetValidatorName() string {
 	return reflect.TypeOf(dto).Name()
 }

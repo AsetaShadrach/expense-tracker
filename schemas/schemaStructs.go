@@ -1,7 +1,9 @@
 package schemas
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -17,9 +19,42 @@ type CustomGormModel struct {
 
 type Category struct {
 	CustomGormModel
-	Name        string `json:"name" gorm:"unique"`
-	Description string `json:"description"`
-	Subcategory int    `json:"subcategory"`
+	Name           string `json:"name"`
+	Description    string `json:"description"`
+	CategoryType   string `json:"category_type"` // Topic or Category
+	ParentCategory int    `json:"parent_category"`
+	CreatedBy      int    `json:"created_by"`
+}
+
+func (cat *Category) BeforeSave(tx *gorm.DB) (err error) {
+	_, err = gorm.G[Category](DB).Where("id = ?", cat.CreatedBy).First(context.Background())
+	if err != nil {
+		err = errors.New(fmt.Sprintf("created_by <%d> missing or not found", cat.CreatedBy))
+	}
+	return
+}
+
+type CashFlow struct {
+	CustomGormModel
+	AssociationId   int     `json:"association_id"` // Topic ID
+	Amount          float64 `json:"amount"`
+	Month           int     `json:"month"`
+	Day             int     `json:"day"`
+	IncomeOrExpense string  `json:"income_or_expense"` // Income/Expense
+	Description     string  `json:"description"`
+	CategoryId      int     `json:"category_id"`
+}
+
+func (cf *CashFlow) BeforeSave(tx *gorm.DB) (err error) {
+	_, err = gorm.G[Category](DB).Where("id = ?", cf.AssociationId).First(context.Background())
+	if err != nil {
+		err = errors.New(fmt.Sprintf("association_id <%d> missing or not found", cf.AssociationId))
+	}
+	_, err = gorm.G[Category](DB).Where("id = ?", cf.CategoryId).First(context.Background())
+	if err != nil {
+		err = errors.New(fmt.Sprintf("category_id <%d> missing or not found", cf.CategoryId))
+	}
+	return
 }
 
 type User struct {

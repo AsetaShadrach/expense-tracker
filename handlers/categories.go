@@ -17,10 +17,10 @@ import (
 
 func CreateCategoryHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	var responseVal []byte
-
-	var validatedData schemas.CategoryInputDto
-
+	var (
+		responseVal   []byte
+		validatedData schemas.CategoryInputDto
+	)
 	er := json.NewDecoder(r.Body).Decode(&validatedData)
 
 	if er != nil {

@@ -9,9 +9,11 @@ import (
 
 func CreateCategory(ctx context.Context, categoryValidator schemas.CategoryInputDto) (response map[string]interface{}, err error) {
 	category := schemas.Category{
-		Name:        categoryValidator.Name,
-		Description: categoryValidator.Description,
-		Subcategory: categoryValidator.Subcategory,
+		Name:           categoryValidator.Name,
+		Description:    categoryValidator.Description,
+		CategoryType:   categoryValidator.CategoryType,
+		ParentCategory: categoryValidator.ParentCategory,
+		CreatedBy:      categoryValidator.CreatedBy,
 	}
 
 	result := gorm.WithResult()
@@ -25,7 +27,10 @@ func CreateCategory(ctx context.Context, categoryValidator schemas.CategoryInput
 	}
 }
 
-func UpdateCategory(categoryId int) (response map[string]interface{}, err error) {
+func UpdateCategory(
+	ctx context.Context,
+	categoryId int,
+	updateCategorySchema schemas.CategoryUpdateDto) (response map[string]interface{}, err error) {
 	return nil, err
 }
 
@@ -51,7 +56,11 @@ func FilterCategories(ctx context.Context, queryParams *map[string]interface{}) 
 	return response, err
 }
 
-func GetOrDeleteCategory(ctx context.Context, categoryId int, method string) (response map[string]interface{}, err error) {
+func GUDCategory(
+	ctx context.Context,
+	categoryId int,
+	method string,
+	updateCategorySchema schemas.CategoryUpdateDto) (response map[string]interface{}, err error) {
 	_, span := tracer.Start(ctx, "helpers.getOrDeleteCategory")
 	defer span.End()
 
@@ -60,11 +69,13 @@ func GetOrDeleteCategory(ctx context.Context, categoryId int, method string) (re
 	if method == "GET" {
 		category, err = gorm.G[schemas.Category](schemas.DB).Where("id = ? ", categoryId).First(ctx)
 		response, _ = schemas.ConvertStructToMap(category)
-	} else {
+	} else if method == "DELETE" {
 		_, err = gorm.G[schemas.Category](schemas.DB).Where("id = ? ", categoryId).Delete(ctx)
 		response = map[string]interface{}{
 			"message": "successful",
 		}
+	} else {
+		response, err = UpdateCategory(ctx, categoryId, updateCategorySchema)
 	}
 
 	return response, err

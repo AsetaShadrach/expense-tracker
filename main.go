@@ -43,7 +43,12 @@ func main() {
 	} else {
 		utils.GeneralLogger.Info("DB connection succesful. Beginning auto migration ---")
 		// Auto migrate
-		err := schemas.DB.AutoMigrate(schemas.User{}, schemas.Category{}, schemas.Group{})
+		err := schemas.DB.AutoMigrate(
+			schemas.User{},
+			schemas.Category{},
+			schemas.Group{},
+			schemas.CashFlow{},
+		)
 
 		if err != nil {
 			utils.GeneralLogger.Error(fmt.Sprintf("An error occured during migration : %v \n\n", err.Error()))

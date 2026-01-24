@@ -9,4 +9,5 @@ func RegisterCashFlowRoutes(r *mux.Router) {
 	r.HandleFunc("/api/v1/cashflow", handlers.CreateCashFlowHandler).Methods("POST")
 	r.HandleFunc("/api/v1/cashflows", handlers.FilterCashFlowHandler).Methods("GET")
 	r.HandleFunc("/api/v1/cashflow/{id}", handlers.GUDCashFlowHandler).Methods("GET", "DELETE", "PUT")
+	r.HandleFunc("/api/v1/cashflows/{id}/summary", handlers.SummaryCashFlowHandler).Methods("GET")
 }

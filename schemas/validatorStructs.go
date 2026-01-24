@@ -21,7 +21,7 @@ type CategoryUpdateDto struct {
 	Description    string `validate:"omitempty,alphanumspace"`
 	CategoryType   string `json:"category_type" validate:"omitempty,oneof=topic category"`
 	ParentCategory int    `json:"parent_category" validate:"omitempty"`
-	CreatedBy      int    `json:"created_by"  validate:"omitempty"`
+	UpdatedBy      int    `json:"updated_by"  validate:"omitempty"`
 }
 
 func (dto CategoryUpdateDto) GetValidatorName() string {
@@ -70,6 +70,7 @@ type CashFlowCreateDto struct {
 	IncomeOrExpense string  `json:"income_or_expense" validate:"oneof=income expense"` // Income/Expense
 	Description     string  `json:"description"`
 	CategoryId      int     `json:"category_id" validate:"required"`
+	AssociationId   int     `json:"association_id" validate:"required"`
 }
 
 func (dto CashFlowCreateDto) GetValidatorName() string {
@@ -83,6 +84,7 @@ type CashFlowUpdateDto struct {
 	IncomeOrExpense string  `json:"income_or_expense" validate:"omitempty,oneof=income expense"` // Income/Expense
 	Description     string  `json:"description" validate:"omitempty"`
 	CategoryId      int     `json:"category_id" validate:"omitempty"`
+	AssociationId   int     `json:"association_id" validate:"omitempty"`
 }
 
 func (dto CashFlowUpdateDto) GetValidatorName() string {

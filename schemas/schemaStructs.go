@@ -24,10 +24,11 @@ type Category struct {
 	CategoryType   string `json:"category_type"` // Topic or Category
 	ParentCategory int    `json:"parent_category"`
 	CreatedBy      int    `json:"created_by"`
+	UpdatedBy      int    `json:"updated_by"`
 }
 
 func (cat *Category) BeforeSave(tx *gorm.DB) (err error) {
-	_, err = gorm.G[Category](DB).Where("id = ?", cat.CreatedBy).First(context.Background())
+	_, err = gorm.G[User](DB).Where("id = ?", cat.CreatedBy).First(context.Background())
 	if err != nil {
 		err = errors.New(fmt.Sprintf("created_by <%d> missing or not found", cat.CreatedBy))
 	}
@@ -46,13 +47,20 @@ type CashFlow struct {
 }
 
 func (cf *CashFlow) BeforeSave(tx *gorm.DB) (err error) {
-	_, err = gorm.G[Category](DB).Where("id = ?", cf.AssociationId).First(context.Background())
+	foundTopic, err := gorm.G[Category](DB).Where("id = ?", cf.AssociationId).First(context.Background())
 	if err != nil {
 		err = errors.New(fmt.Sprintf("association_id <%d> missing or not found", cf.AssociationId))
 	}
-	_, err = gorm.G[Category](DB).Where("id = ?", cf.CategoryId).First(context.Background())
+	foundCat, err := gorm.G[Category](DB).Where("id = ?", cf.CategoryId).First(context.Background())
 	if err != nil {
 		err = errors.New(fmt.Sprintf("category_id <%d> missing or not found", cf.CategoryId))
+	}
+
+	if foundTopic.CategoryType != "topic" {
+		err = errors.New(fmt.Sprintf("association_id <%d> is invalid. association_id must be category type 'topic'", cf.CategoryId))
+	}
+	if foundCat.CategoryType == "topic" {
+		err = errors.New(fmt.Sprintf("category_id <%d> is a topic. Cashflow association failed", cf.CategoryId))
 	}
 	return
 }

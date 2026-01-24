@@ -32,12 +32,11 @@ func CreateGroup(ctx context.Context, data schemas.GroupInputDto) (response map[
 
 		utils.GeneralLogger.Error("an error occured %v", result)
 
-		response, _ = schemas.ConvertStructToMap(groupCreationError)
+		return schemas.ConvertStructToMap(groupCreationError)
 	}
 
-	response, _ = schemas.ConvertStructToMap(group)
+	return schemas.ConvertStructToMap(group)
 
-	return response, err
 }
 
 func UpdateGroup(ctx context.Context, groupId int, updateSchema schemas.GroupUpdateDto) (response map[string]interface{}, err error) {
@@ -65,8 +64,10 @@ func UpdateGroup(ctx context.Context, groupId int, updateSchema schemas.GroupUpd
 			map[string]interface{}{"errors": []string{err.Error()}})...,
 		)
 
-		response, _ = schemas.ConvertStructToMap(groupUpdateError)
-	} else if rowsAffected < 1 {
+		return schemas.ConvertStructToMap(groupUpdateError)
+	}
+
+	if rowsAffected < 1 {
 		groupUpdateError := schemas.ErrorList{
 			ResponseCode: "GR000",
 			Message:      "An error occured",
@@ -77,15 +78,13 @@ func UpdateGroup(ctx context.Context, groupId int, updateSchema schemas.GroupUpd
 			map[string]interface{}{"errors": groupUpdateError.Errors})...,
 		)
 
-		response, _ = schemas.ConvertStructToMap(groupUpdateError)
+		return schemas.ConvertStructToMap(groupUpdateError)
 
-	} else {
-		// If update happend it means the group exists
-		updatedGroup, _ := gorm.G[schemas.Group](schemas.DB).Where("id = ? ", groupId).First(ctx)
-		response, _ = schemas.ConvertStructToMap(updatedGroup)
 	}
+	// If update happend it means the group exists
+	updatedGroup, _ := gorm.G[schemas.Group](schemas.DB).Where("id = ? ", groupId).First(ctx)
+	return schemas.ConvertStructToMap(updatedGroup)
 
-	return response, err
 }
 
 func FilterGroups(ctx context.Context, queryParams *map[string]interface{}) (response map[string]interface{}, err error) {
@@ -116,15 +115,14 @@ func GUDGroup(ctx context.Context, groupId int, method string, updateGroupSchema
 
 	if method == "GET" {
 		group, err = gorm.G[schemas.Group](schemas.DB).Where("id = ? ", groupId).First(ctx)
-		response, _ = schemas.ConvertStructToMap(group)
+		return schemas.ConvertStructToMap(group)
 	} else if method == "DELETE" {
 		_, err = gorm.G[schemas.Group](schemas.DB).Where("id = ? ", groupId).Delete(ctx)
 		response = map[string]interface{}{
 			"message": "successful",
 		}
+		return response, nil
 	} else {
-		response, err = UpdateGroup(ctx, groupId, updateGroupSchema)
+		return UpdateGroup(ctx, groupId, updateGroupSchema)
 	}
-
-	return response, err
 }

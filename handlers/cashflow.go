@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/AsetaShadrach/expense-tracker/helpers"
 	"github.com/AsetaShadrach/expense-tracker/schemas"
 	"github.com/go-playground/validator/v10"
+	"github.com/gorilla/mux"
 )
 
 func CreateCashFlowHandler(w http.ResponseWriter, r *http.Request) {
@@ -73,11 +75,67 @@ func CreateCashFlowHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func FilterCashFlowHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(r.URL.Path)
-	w.Write([]byte("TODO"))
+
+	var responseBytes []byte
+
+	vars := mux.Vars(r)
+	topicId, _ := strconv.Atoi(vars["id"])
+
+	response, err := helpers.FetchCashFlowTree(r.Context(), topicId)
+
+	if err != nil {
+		response := schemas.ErrorList{
+			ResponseCode: "GR002",
+			Message:      "An error occured",
+			Errors:       []string{err.Error()},
+		}
+
+		responseBytes, _ = json.Marshal(response)
+		w.WriteHeader(http.StatusBadRequest)
+	} else {
+		responseBytes, _ = json.Marshal(response)
+		w.WriteHeader(http.StatusOK)
+	}
+
+	w.Write(responseBytes)
+	return
+
 }
 
 func GUDCashFlowHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.URL.Path)
 	w.Write([]byte("TODO"))
+}
+
+func SummaryCashFlowHandler(w http.ResponseWriter, r *http.Request) {
+
+	var responseBytes []byte
+
+	vars := mux.Vars(r)
+	topicId, _ := strconv.Atoi(vars["id"])
+
+	response, err := helpers.FetchCashFlowTree(r.Context(), topicId)
+
+	if err != nil {
+		response := schemas.ErrorList{
+			ResponseCode: "GR002",
+			Message:      "An error occured",
+			Errors:       []string{err.Error()},
+		}
+
+		responseBytes, _ = json.Marshal(response)
+		w.WriteHeader(http.StatusBadRequest)
+	} else {
+		responseBytes, err = json.Marshal(response)
+		if err != nil {
+			responseBytes = []byte(fmt.Sprintf("%s", err.Error()))
+			w.WriteHeader(http.StatusInternalServerError)
+		} else {
+			w.WriteHeader(http.StatusOK)
+		}
+	}
+
+	w.Write(responseBytes)
+	return
+
 }

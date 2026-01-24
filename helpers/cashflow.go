@@ -255,13 +255,6 @@ childNode *CashFlowNode
 -- prev node in heirachy
 */
 func (currentCFlowNodePtr *CashFlowNode) assignCflowNodes(parentIdMapsPtr *map[CategoryKey]*CashFlowNode, parentKey CategoryKey, childNodePtr *CashFlowNode) {
-	fmt.Println("?????00????\n")
-	fmt.Println("currentCFlowNodePtr ", currentCFlowNodePtr)
-	fmt.Println("currentCFlowNodePtr.ChildNodes ", currentCFlowNodePtr.ChildNodes)
-	fmt.Println("parentKey  ", parentKey)
-	fmt.Println("childNodePtr ", childNodePtr)
-	fmt.Println(" currentCFlowNodePtr.ParentCategoryId  ", currentCFlowNodePtr.ParentCategoryId)
-
 	// Add the child nodes
 	if currentCFlowNodePtr.NodeType != "income" && currentCFlowNodePtr.NodeType != "expense" {
 		currentCFlowNodePtr.ChildNodes = append(currentCFlowNodePtr.ChildNodes, childNodePtr)

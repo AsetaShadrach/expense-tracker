@@ -289,10 +289,6 @@ func (currentCFlowNodePtr *CashFlowNode) assignCflowNodes(parentIdMapsPtr *map[C
 		Type: keyData.ParentNodeType,
 	}
 
-	fmt.Println("keyData  ------------ ", keyData)
-	fmt.Println("newKey  ------------ ", newParentKey)
-	fmt.Println("The currentCFlowNodePtr Node updated  ------------ ", currentCFlowNodePtr)
-
 	(*parentIdMapsPtr)[parentKey].assignCflowNodes(parentIdMapsPtr, newParentKey, currentCFlowNodePtr)
 
 }

@@ -1,5 +1,8 @@
+## IDEA 
+Have a bugeting software that sits as an independet app and almost never connects to the internet i.e , have the app UI, server and DB sitted on the same device.
+
 ## TODO 
-- Add filter endpoints for all models
+- Enforce params for filter endpoints
 
 # Critical TODO 
 - Switch from mutable params to structs

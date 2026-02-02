@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"slices"
 	"strconv"
 
 	"github.com/AsetaShadrach/expense-tracker/helpers"
@@ -75,30 +76,39 @@ func CreateCashFlowHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func FilterCashFlowHandler(w http.ResponseWriter, r *http.Request) {
+	_, span := tracer.Start(r.Context(), "filterCashflowHandler")
+	defer span.End()
 
-	var responseBytes []byte
+	queryParams := make(map[string]interface{})
 
-	vars := mux.Vars(r)
-	topicId, _ := strconv.Atoi(vars["id"])
+	singleIntParams := []string{"items", "page"}
 
-	response, err := helpers.FetchCashFlowTree(r.Context(), topicId)
+	for key, val := range r.URL.Query() {
+		if slices.Contains(singleIntParams, key) {
+			queryParams[key], _ = strconv.Atoi(val[0])
+		} else {
+			queryParams[key] = val
+		}
+	}
+
+	response, err := helpers.FilterCashflows(r.Context(), &queryParams)
 
 	if err != nil {
-		response := schemas.ErrorList{
-			ResponseCode: "GR002",
+		errResponse := schemas.ErrorList{
 			Message:      "An error occured",
+			ResponseCode: "FTOO9",
 			Errors:       []string{err.Error()},
 		}
 
-		responseBytes, _ = json.Marshal(response)
-		w.WriteHeader(http.StatusBadRequest)
-	} else {
-		responseBytes, _ = json.Marshal(response)
-		w.WriteHeader(http.StatusOK)
+		errorBytes, _ := json.Marshal(errResponse)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(errorBytes)
 	}
 
+	fmt.Println(r.URL.Path)
+	responseBytes, _ := json.Marshal(response)
+	w.WriteHeader(http.StatusOK)
 	w.Write(responseBytes)
-	return
 
 }
 

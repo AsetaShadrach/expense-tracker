@@ -121,7 +121,7 @@ func GUDCategoryHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		responseBytes    []byte
 		err              error
-		validationSchema schemas.GroupUpdateDto
+		validationSchema schemas.CategoryUpdateDto
 	)
 
 	if strings.Contains("PUT,PATCH", r.Method) {
@@ -138,7 +138,7 @@ func GUDCategoryHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	groupId, _ := strconv.Atoi(vars["id"])
 
-	response, err := helpers.GUDGroup(r.Context(), groupId, r.Method, validationSchema)
+	response, err := helpers.GUDCategory(r.Context(), groupId, r.Method, validationSchema)
 
 	if err != nil {
 		response := schemas.ErrorList{

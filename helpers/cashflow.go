@@ -32,7 +32,7 @@ func CreateCashFlow(ctx context.Context, data schemas.CashFlowCreateDto) (respon
 	return schemas.ConvertStructToMap(cashflow)
 }
 
-func FilterCashFlow(ctx context.Context, queryParams *map[string]interface{}) (response map[string]interface{}, err error) {
+func FilterCashflows(ctx context.Context, queryParams *map[string]interface{}) (response map[string]interface{}, err error) {
 	_, span := tracer.Start(ctx, "helpers.FilterCashFlow")
 	defer span.End()
 
@@ -257,7 +257,16 @@ childNode *CashFlowNode
 func (currentCFlowNodePtr *CashFlowNode) assignCflowNodes(parentIdMapsPtr *map[CategoryKey]*CashFlowNode, parentKey CategoryKey, childNodePtr *CashFlowNode) {
 	// Add the child nodes
 	if currentCFlowNodePtr.NodeType != "income" && currentCFlowNodePtr.NodeType != "expense" {
-		currentCFlowNodePtr.ChildNodes = append(currentCFlowNodePtr.ChildNodes, childNodePtr)
+		if !childNodePtr.ParentAlreadyAssigned {
+			currentCFlowNodePtr.ChildNodes = append(currentCFlowNodePtr.ChildNodes, childNodePtr)
+
+			// Given a category cannot be a child in 2 arrays
+			// i.e cannot have two parents.
+			// Once you have appended its pointer to an array of the parent don't do it again
+			// In the event of very nested summaries it prevents redundant looping
+			childNodePtr.ParentAlreadyAssigned = true
+		}
+
 	}
 	// Inside the function, after adding the child:
 	if childNodePtr != nil {
@@ -273,16 +282,6 @@ func (currentCFlowNodePtr *CashFlowNode) assignCflowNodes(parentIdMapsPtr *map[C
 	// Parent to the parent of the current node
 	// i.e the parent for the next loop
 	keyData := (*parentIdMapsPtr)[parentKey]
-
-	if currentCFlowNodePtr.ParentAlreadyAssigned {
-		return
-	}
-
-	// Given a category cannot be a child in 2 arrays
-	// i.e cannot have two parents.
-	// Once you have appended its pointer to an array of the parent don't do it again
-	// In the event of very nested summaries it prevents redundant looping
-	currentCFlowNodePtr.ParentAlreadyAssigned = true
 
 	newParentKey := CategoryKey{
 		Id:   keyData.ParentCategoryId,

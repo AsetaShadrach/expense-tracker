@@ -17,6 +17,22 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux"
 )
 
+func enableCORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		// Handle preflight
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	envLoadErr := godotenv.Load()
 	if envLoadErr != nil {
@@ -75,7 +91,7 @@ func main() {
 	utils.GeneralLogger.Info("Routers loaded succesfully ---")
 
 	srv := &http.Server{
-		Handler:      r,
+		Handler:      enableCORS(r),
 		Addr:         os.Getenv("SERVER_ADDRESS"),
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,

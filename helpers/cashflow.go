@@ -39,7 +39,7 @@ func FilterCashflows(ctx context.Context, queryParams *map[string]interface{}) (
 	queries := *queryParams
 	offset := queries["page"].(int) - 1*queries["items"].(int)
 
-	resp, err := gorm.G[schemas.CashFlow](schemas.DB).Offset(offset).Limit(queries["items"].(int)).Where("").Find(ctx)
+	resp, err := gorm.G[schemas.CashFlow](schemas.DB).Offset(offset).Limit(queries["items"].(int)).Where("").Order("created_at desc").Find(ctx)
 
 	if err != nil {
 		return nil, err

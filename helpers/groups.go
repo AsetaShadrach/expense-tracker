@@ -92,8 +92,17 @@ func FilterGroups(ctx context.Context, queryParams *map[string]interface{}) (res
 	defer span.End()
 
 	queryData := *queryParams
+	// Assign to create a copy
+	schemaParams := make(map[string]interface{})
+	for k, v := range queryData {
+		schemaParams[k] = v
+	}
+
+	delete(schemaParams, "items")
+	delete(schemaParams, "page")
+
 	offset := (queryData["page"].(int) - 1) * queryData["items"].(int)
-	resp, err := gorm.G[schemas.Group](schemas.DB).Offset(offset).Limit(queryData["items"].(int)).Where("").Find(ctx)
+	resp, err := gorm.G[schemas.Group](schemas.DB).Offset(offset).Limit(queryData["items"].(int)).Where(schemaParams).Find(ctx)
 	if err != nil {
 		return nil, err
 	}

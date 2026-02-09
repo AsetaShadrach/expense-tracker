@@ -72,7 +72,7 @@ func UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 func FilterUsersHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	queryParams := r.URL.Query()
-	params := make(map[string]string)
+	params := make(map[string]interface{})
 
 	for j, k := range queryParams {
 		params[j] = k[0]

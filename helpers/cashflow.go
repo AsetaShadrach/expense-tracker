@@ -37,9 +37,19 @@ func FilterCashflows(ctx context.Context, queryParams *map[string]interface{}) (
 	defer span.End()
 
 	queries := *queryParams
+
+	// Assign to create a copy
+	schemaParams := make(map[string]interface{})
+	for k, v := range queries {
+		schemaParams[k] = v
+	}
+
+	delete(schemaParams, "items")
+	delete(schemaParams, "page")
+
 	offset := queries["page"].(int) - 1*queries["items"].(int)
 
-	resp, err := gorm.G[schemas.CashFlow](schemas.DB).Offset(offset).Limit(queries["items"].(int)).Where("").Order("created_at desc").Find(ctx)
+	resp, err := gorm.G[schemas.CashFlow](schemas.DB).Offset(offset).Limit(queries["items"].(int)).Where(queries).Order("created_at desc").Find(ctx)
 
 	if err != nil {
 		return nil, err
@@ -133,6 +143,8 @@ type CashFlowNode struct {
 	TotalOut              int             `json:"total_out"`
 	ParentNodeType        string          `json:"-"`
 	ParentAlreadyAssigned bool            `json:"-"`
+	CreatedAt             string          `json:"created_at,omitempty"`
+	OccuredOn             string          `json:"occured_on,omitempty"`
 }
 
 // This should be enough to differenciate categories and expenses
@@ -181,6 +193,8 @@ func FetchCashFlowTree(ctx context.Context, topicId int) (response map[string]in
 			NodeType:         val.IncomeOrExpense,
 			ParentCategoryId: val.CategoryId,
 			Name:             val.Description, // Use decriptions for the final node i.e the expense or income
+			CreatedAt:        val.CreatedAt.String(),
+			OccuredOn:        fmt.Sprintf(`%v/%v`, val.Month, val.Day),
 		}
 
 		if val.IncomeOrExpense == "income" {

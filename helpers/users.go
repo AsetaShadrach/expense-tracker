@@ -47,19 +47,29 @@ func UpdateUser(userId int) (response map[string]interface{}, err error) {
 	return nil, err
 }
 
-func FilterUsers(ctx context.Context, queryParamsPtr *map[string]string) (response map[string]interface{}, err error) {
+func FilterUsers(ctx context.Context, queryParamsPtr *map[string]interface{}) (response map[string]interface{}, err error) {
 	_, span := tracer.Start(ctx, "helper.filterUsers")
 	defer span.End()
 
 	queryParams := *queryParamsPtr
 
-	userList := []schemas.User{}
-	schemas.DB.Limit(10).Where("username LIKE ?", queryParams["name"]+"%").Find(&userList)
+	// Assign to create a copy
+	schemaParams := make(map[string]interface{})
+	for k, v := range queryParams {
+		schemaParams[k] = v
+	}
+
+	delete(schemaParams, "items")
+	delete(schemaParams, "page")
+
+	offset := (queryParams["page"].(int) - 1) * queryParams["items"].(int)
+
+	resp, err := gorm.G[schemas.User](schemas.DB).Offset(offset).Limit(queryParams["items"].(int)).Where(schemaParams).Find(ctx)
 
 	userListResponse := map[string]interface{}{
 		"page":  1,
 		"items": 10,
-		"data":  userList,
+		"data":  resp,
 	}
 
 	return userListResponse, nil
